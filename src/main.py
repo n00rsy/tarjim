@@ -1,62 +1,36 @@
-import pytesseract
-from PIL import Image
 from pdf2image import convert_from_path
 import cv2
-import matplotlib.pyplot as plt
 import numpy as np
-from numpy import interp
-import google.auth
-from google.cloud import vision
-from google.cloud.vision_v1 import types
-import json
-import re
 from bounds_ui import select_lines_ui, display_selections
-from ocr import google_ocr, annotations_to_lines, calculate_line_height_threshold, preprocess_annotations, estimate_font_size
-
-
+from ocr import google_ocr, find_footnote_line
 
 if __name__ == "__main__":
-    # pages = convert_from_path('mksa.pdf', dpi=400)
+    pages = convert_from_path('../mksa.pdf', dpi=400)
 
     # # Save the image as a PNG file
     # first_page.save("output_mksa.png", "PNG")
-    img = cv2.imread('../output_mksa.png')
+    # img = cv2.imread('../output_mksa.png')
 
-    selected_lines = select_lines_ui(img)
+    #selected_lines = select_lines_ui(img)
 
-    display_selections(img, selected_lines)
+    # display_selections(img, selected_lines)
+    selected_lines = [491, 2608, 3467]
+    for i, page_pil in enumerate(pages):
+        print(f"processing page {i}")
+        # Convert RGB to BGR (OpenCV format)
+        page_cv2 = cv2.cvtColor(np.array(page_pil), cv2.COLOR_RGB2BGR)
+        page_h, page_w, *_ = page_cv2.shape
+        # do OCR to find footer line
+        footnote_line = find_footnote_line(page_cv2, selected_lines[0], i)
+        print("footnote_line: ", footnote_line)
+        body = page_cv2[selected_lines[0]:footnote_line, :]
+        footnotes = page_cv2[footnote_line:selected_lines[2], :]
 
-    body = img[selected_lines[0]:selected_lines[1], :]
-    footnotes = img[selected_lines[1]:selected_lines[2], :]
+        cv2.imwrite(f"temp/output_{i}_ocr_body.png", body)
+        if footnote_line < page_h:
+            cv2.imwrite(f"temp/output_{i}_ocr_footnote.png", footnotes)
+        print("\n")
 
-
-    body_annotations = google_ocr(body)
-
-    word_list, bounding_polys = preprocess_annotations(body_annotations)
-    line_height_threshold = calculate_line_height_threshold(bounding_polys)
-    lines = annotations_to_lines(word_list, line_height_threshold)
-    reordered_text = '\n'.join([' '.join(line) for line in lines])
-
-    avg_height, height_std = estimate_font_size(word_list, line_height_threshold)
-    print("avg height: ", avg_height)
-    print("height std: ", height_std)
-
-
-    with open('output_mksa.txt', 'w', encoding='utf-8') as f:
-        f.write(reordered_text)
-    print("wrote text to output_mksa.txt")
-    # TODO:
-    # find height, std of one page
-
-    # send full images to google
-    # isolate bodies and concat
-    # save
-
-    # words = ["مرحبا 123", "١٢٣ ( 456 )", "( hello )", "سلام"]
-    # results = {word: is_valid_arabic_word(word) for word in words}
-    # print(results)
-
-    # Calculate the average height of the contours (which gives an idea of the font size)
-
-    # with open('output_mksa.txt', 'w', encoding='utf-8') as f:
-    #     f.write(text)
+    # send images to google
+    # concat text
+    # chatgpt

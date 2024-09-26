@@ -45,8 +45,6 @@ def select_lines_ui(img):
     for line_y in selected_lines:
         cv2.line(img_resized, (0, line_y), (img_resized.shape[1], line_y), (255, 0, 0), 2)
 
-    print("img.shape[:2]", img.shape[0])
-    print("interp", round(interp(selected_lines[0],[0, 500],[0,img.shape[0]])))
     selected_lines[0] = round(interp(selected_lines[0],[0, 500],[0,img.shape[0]]))
     selected_lines[1] = round(interp(selected_lines[1],[0, 500],[0,img.shape[0]]))
     selected_lines[2] = round(interp(selected_lines[2],[0, 500],[0,img.shape[0]]))

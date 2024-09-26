@@ -1,0 +1,7 @@
+temp
+*.png
+*.jpg
+*.txt
+*.pdf
+poppler-24.07.0/
+__pycache__/
