@@ -6,8 +6,9 @@ from ocr import google_ocr, find_footnote_line
 
 if __name__ == "__main__":
     pages = convert_from_path('../mksa.pdf', dpi=400)
-
-    # # Save the image as a PNG file
+    start = 9
+    end = 46
+    # Save the image as a PNG file
     # first_page.save("output_mksa.png", "PNG")
     # img = cv2.imread('../output_mksa.png')
 
@@ -15,7 +16,8 @@ if __name__ == "__main__":
 
     # display_selections(img, selected_lines)
     selected_lines = [491, 2608, 3467]
-    for i, page_pil in enumerate(pages):
+    all_text = ""
+    for i, page_pil in enumerate(pages[start:end]):
         print(f"processing page {i}")
         # Convert RGB to BGR (OpenCV format)
         page_cv2 = cv2.cvtColor(np.array(page_pil), cv2.COLOR_RGB2BGR)
@@ -29,8 +31,12 @@ if __name__ == "__main__":
         cv2.imwrite(f"temp/output_{i}_ocr_body.png", body)
         if footnote_line < page_h:
             cv2.imwrite(f"temp/output_{i}_ocr_footnote.png", footnotes)
+
+        all_text = all_text + '\n' + google_ocr(body)
+
         print("\n")
 
-    # send images to google
-    # concat text
+    f = open("temp/mksa_output.txt", "w")
+    f.write(all_text)
+    f.close()
     # chatgpt
